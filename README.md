@@ -1,2 +1,3 @@
-# DEVTINDER
-This is the devTinder project
+# DEVTINDER BY NAMASTE NODE
+
+This is a demo project to learn MERN stack.
