@@ -1,0 +1,64 @@
+const express = require('express');
+const userModel = require('../models/user');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { validateSignUpData } = require('../utils/Validation');
+const authRouter = express.Router();
+
+//login
+authRouter.post("/login", async (req, resp) => {
+    const { emaildId, password } = req.body;
+
+    const user = await userModel.findOne({ emaildId: emaildId });
+    if (!user) {
+        throw new Error("Invalid Credential")
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const { _id } = user;
+
+    if (isPasswordValid) {
+        // Steps for JWT creattion and authentication
+        // 1. Create a JWT token
+        // 2. Add the token to cookie and send the response back to the user
+        const token = jwt.sign({ id: _id }, 'DEVTINDER@$799!', { expiresIn: '1d' });
+
+        resp.cookie("token", token)
+        resp.send("Login Successfull !!!")
+    }
+    else {
+        throw new Error("Password is incorrect")
+    }
+})
+
+// Sign up
+authRouter.post("/signup", async (req, resp, next) => {
+    // Steps
+    // 1. Validation of data
+    // 2. Encrypt the password
+    // For that we are creating seperate function to validate signup data
+    // 3. store encrypted password inside db
+
+    try {
+        validateSignUpData(req)
+        console.log('req', req.body);
+        const { firstName, lastName, password, emaildId } = req.body;
+        const passwordHash = await bcrypt.hash(password, salt = 10);
+
+        const user = new userModel({
+            firstName,
+            lastName,
+            emaildId,
+            password: passwordHash
+        });
+        // Creating a new instance for user model
+        await user.save();
+        resp.send("User added successfully")
+    }
+    catch (err) {
+        console.log('eer', err);
+        resp.status(400).send("Error: " + err.message)
+    }
+})
+
+
+module.exports = authRouter;
