@@ -7,9 +7,9 @@ const authRouter = express.Router();
 
 //login
 authRouter.post("/login", async (req, resp) => {
-    const { emaildId, password } = req.body;
+    const { emailId, password } = req.body;
 
-    const user = await userModel.findOne({ emaildId: emaildId });
+    const user = await userModel.findOne({ emailId: emailId });
     if (!user) {
         throw new Error("Invalid Credential")
     }
@@ -40,25 +40,41 @@ authRouter.post("/signup", async (req, resp, next) => {
 
     try {
         validateSignUpData(req)
-        console.log('req', req.body);
-        const { firstName, lastName, password, emaildId } = req.body;
+        const { firstName, lastName, password, emailId } = req.body;
         const passwordHash = await bcrypt.hash(password, salt = 10);
 
         const user = new userModel({
             firstName,
             lastName,
-            emaildId,
+            emailId,
             password: passwordHash
         });
         // Creating a new instance for user model
         await user.save();
-        resp.send("User added successfully")
+        resp.json({ "message": "User added successfully", "status": 200 })
     }
     catch (err) {
-        console.log('eer', err);
+        console.log('error: ', err);
         resp.status(400).send("Error: " + err.message)
     }
 })
 
+authRouter.post("/logout", async (_, resp, next) => {
+    try {
+        // resp.cookie("token", null, {
+        //     expiresIn: new Date(Date.now()),
+        // })
+        // Clear cookie immediately
+        resp.clearCookie("token");
+
+        resp.status(200).json({
+            "message": "Logout Successfull !!!",
+            "status": true
+        })
+    }
+    catch (err) {
+        resp.status(400).send("Error: " + err.message)
+    }
+})
 
 module.exports = authRouter;
